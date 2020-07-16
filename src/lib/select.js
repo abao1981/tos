@@ -84,7 +84,7 @@ function onDocumentMouseUp(event) {
                         existed.userData.instanceIds.push(currentMesh.userData.instanceId);
                     }
                 } else {
-                    if (currentMesh.userData.instanceId) currentMesh.userData.instanceIds = [currentMesh.userData.instanceId];
+                    if (currentMesh.userData.instanceId !== undefined) currentMesh.userData.instanceIds = [currentMesh.userData.instanceId];
                     this.selected.push(currentMesh);
                 }
                 this.point = currentMesh.userData.point;
@@ -106,7 +106,7 @@ function onDocumentMouseUp(event) {
                     }
                 }
             } else {
-                if (currentMesh.userData.instanceId) currentMesh.userData.instanceIds = [currentMesh.userData.instanceId];
+                if (currentMesh.userData.instanceId !== undefined) currentMesh.userData.instanceIds = [currentMesh.userData.instanceId];
                 this.selected = [currentMesh];
                 this.point = currentMesh.userData.point;
                 this.clicked = true;
