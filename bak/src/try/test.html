@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>webgl入门</title>
+    <script src="./build/three.js" type="text/javascript"></script>
+    <script src="./js/controls/OrbitControls.js"></script>
+    <script src="./js/loaders/SVGLoader.js"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body onload="main();">
+    <canvas id="canvas" style="display: none;">你的浏览器不支持canvas</canvas>
+</body>
+<script>
+    let scene, camera, renderer, light, mesh, controls
+
+    //初始化渲染器
+    function initRenderer() {
+        renderer = new THREE.WebGLRenderer({ antialias: true })
+        renderer.setPixelRatio(window.devicePixelRatio)
+        renderer.setSize(window.innerWidth, window.innerHeight)//渲染大小
+        document.body.appendChild(renderer.domElement)
+        renderer.setClearColor(0xFFFFFF, 1.0)//渲染背景颜色
+
+    }
+
+    //初始化相机
+    function initCamera() {
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000)
+        camera.position.set(10, 5, 20)
+    }
+
+    //初始化场景
+    function initScene() {
+        scene = new THREE.Scene()
+        scene.background = new THREE.Color(0xf0f0f0)
+        let axesHelper = new THREE.AxesHelper(50)
+        scene.add(axesHelper)
+    }
+
+    //初始化光线
+    function initLight() {
+        //环境光
+        light = new THREE.AmbientLight(0x00ff00)
+        scene.add(light)
+
+        //方向光
+        light = new THREE.DirectionalLight(0xff0000, 1)
+        light.position.set(0, 0, 1)
+        scene.add(light)
+    }
+
+    //构建物体
+    function initObject() {
+        let geometry = new THREE.BoxGeometry(50, 50, 50)//构建一个正方体
+        let material = new THREE.MeshLambertMaterial({ color: 0xffffff })//
+        mesh = new THREE.Mesh(geometry, material)
+        scene.add(mesh)
+
+        //用canvas生成图片
+        let canvas = document.getElementById('canvas')
+        let ctx = canvas.getContext('2d')
+        canvas.width = 300
+        canvas.height = 300
+        //制作矩形
+        ctx.fillStyle = "rgba(255,165,0,0.8)";
+        ctx.fillRect(0, 0, 300, 300)
+        //设置文字
+        ctx.fillStyle = "#fff";
+        ctx.font = 'normal 18pt "楷体"'
+        ctx.fillText('模型介绍', 100, 20)
+        let textWord = '该模型由小少小同学制作完成'
+        //文字换行
+        let len = parseInt(textWord.length / 10)
+        for (let i = 0; i < (len + 1); i++) {
+            let space = 10
+            if (i === len) {
+                space = textWord.length - len * 10
+            }
+            console.log('len+' + len, 'space+' + space)
+            let word = textWord.substr(i * 10, space)
+            ctx.fillText(word, 15, 60 * (i + 1))
+        }
+        //生成图片
+        let url = canvas.toDataURL('image/png');
+        let texture = THREE.ImageUtils.loadTexture(url, null, function (t) { })
+        let material1 = new THREE.SpriteMaterial({
+            map: texture,
+        })
+        material1.sizeAttenuation = false;
+        material1.depthWrite = false;
+        material1.depthTest = false;
+
+        let rect = new THREE.Sprite(material1)
+        rect.scale.set(0.1, 0.1, 1);
+        rect.position.set(43, 40, 25)
+        scene.add(rect)
+
+    }
+
+
+    //用户交互插件 鼠标左键按住旋转，右键按住平移，滚轮缩放
+    function initControls() {
+        controls = new THREE.OrbitControls(camera, renderer.domElement)
+        // 如果使用animate方法时，将此函数删除
+        //controls.addEventListener( 'change', render );
+        // 使动画循环使用时阻尼或自转 意思是否有惯性
+        controls.enableDamping = true
+        //动态阻尼系数 就是鼠标拖拽旋转灵敏度
+        //controls.dampingFactor = 0.25;
+        //是否可以缩放
+        controls.enableZoom = true
+        //是否自动旋转
+        //controls.autoRotate = true;
+        //设置相机距离原点的最远距离
+        controls.minDistance = 200
+        //设置相机距离原点的最远距离
+        controls.maxDistance = 600
+        //是否开启右键拖拽
+        controls.enablePan = true
+    }
+
+    function animate() {
+        //更新控制器
+        controls.update()
+        requestAnimationFrame(animate)
+        renderer.render(scene, camera)
+    }
+
+    function main() {
+        initRenderer()//渲染器
+        initCamera()//相机
+        initScene()//场景
+        initLight()//光线
+        initObject()//物体
+        initControls()
+        animate()//动画
+    }
+
+</script>
+
+
+</body>
+
+</html>

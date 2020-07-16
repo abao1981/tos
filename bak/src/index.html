@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - clipping planes</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			margin: 0px;
+			background-color: #000000;
+			overflow: hidden;
+		}
+
+		.selectBox {
+			border: 1px solid #55aaff;
+			background-color: rgba(75, 160, 255, 0.3);
+			position: fixed;
+		}
+
+		.label {
+			/*display: inline-block;*/
+			color: #FFF;
+			width: 28px;
+			height: 28px;
+			/*line-height: 28px;*/
+			/*padding-left: 28px;*/
+			background: url("已完成.svg") no-repeat scroll 0 0 transparent;
+		}
+	</style>
+</head>
+
+<body>
+	<script src="../build/three.js"></script>
+	<!-- <script src="js/controls/MapControls.js"></script>
+	<script src="js/controls/DragControls.js"></script>
+	<script src="js/loaders/GLTFLoader.js"></script>
+	<script src="js/controls/MapControls.js"></script>
+	<script src="js/loaders/FBXLoader.js"></script>
+	<script src="js/libs/inflate.min.js"></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.0/tween.umd.js'></script>
+	<script src='https://unpkg.com/@reactivex/rxjs@6.5.5/dist/global/rxjs.umd.js'></script> -->
+	<script type="module">
+		import { scene, camera, renderer, controls, tempControls } from './main.js';
+		import { loadModel, loadModelDiff, init, loadModelStage } from './lib/engine.js';
+		// import { enableMeasure, disableMeasure, registerMeasure, clear, addEventListener, removeEventListener } from './measure.js';
+		// setTimeout(() => {
+		// 	select.enabled = false
+		// }, 5000)
+		// import {registerEmergency, enableEmergency, disableEmergency} from './markIt2.js';
+		
+		import { drawGrids, setLowLevel } from './lib/grids.js';
+		import { separate } from './lib/levels.js';
+		import { moveToRoom, moveIntoRoom, quitFirstPersonMode } from './lib/moveRoom.js';
+		import { FBXLoader } from '../jsm/loaders/FBXLoader.js';
+		import fp from './lib/firstPerson.js';
+		import { computeCameraPosition, cleanup } from './lib/utils.js';
+		import CameraControls from '../jsm/controls/camera-controls.module.js';
+		let loader = new FBXLoader();
+
+		// loader.load( './3d.FBX', function ( object ) {
+		// 	let meshes = [];
+		// 	for (let child of object.children){
+		// 		if (!child.isMesh) continue;
+		// 		if (/[前后左右上下]/.test(child.name)){
+		// 			// child.geometry.scale(1 / 0.3048, 1 / 0.3048, 1 / 0.3048)
+		// 			var edges = new THREE.EdgesGeometry( child.geometry.clone() );
+		// 			edges.scale(0.3048, 0.3048, 0.3048)
+		// 			var line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x0A0A0A } ) );
+		// 			meshes.push( line );
+		// 			// child.geometry.scale(1 / )
+		// 		}else{
+		// 			child.material.side = THREE.DoubleSide;
+		// 		}
+		// 	} ;
+		// 	scene.add(...meshes);
+		// 	scene.add(object);
+		// } );
+
+		// setLowLevel(-100);
+		// drawGrids(223, 2).then(lines => scene.add(...lines));
+
+		// moveToRoom([-8.38317237929272,
+		//     76.97159903914552,
+		//     0].map(i => i * 0.3048),
+		//     [45.75068619748819,
+		//     105.35086404313066,
+		// 	16.404199475065617].map(i => i * 0.3048));
+
+		init({
+			onAfterMeshLoad: mesh => {
+				// setStyle(mesh.material, PatternDelay);
+				// mesh.material.color.set(0, 0, 1);
+				// mesh.material.transparent = true;
+				// mesh.material.opacity = 0.2;
+			},
+			// elementFilter: mesh => mesh.name === "2_15_72"
+		});
+
+		// 
+		setTimeout(() => {
+			// pinCreator.fromJson({
+			// 	target: new THREE.Vector3(),
+			// 	point: new THREE.Vector3(-3.459825798189783, 6.45754255608685, 11.600000381469727),
+			// 	position: new THREE.Vector3(34.66510757997193, 95.06826385562866, 201.64413089387327),
+			// 	zoom: 1,
+			// 	type: 'processing',
+			// 	name: 'func'
+			// })
+		}, 5000);
+		
+
+		loadModel(224, domain => console.log(domain, 'done')).then(_ => {
+			// setTimeout(() => {
+			// 	cleanup(scene);
+			// 	loadModel(224, domain => console.log(domain, 'done')).then(_ => {
+			// 		setTimeout(() => {
+			// 			cleanup(scene);
+			// 		}, 5000);
+			// 	});
+			// }, 5000);
+		});
+
+		// fp(controls, 10);
+
+
+		scene.add(new THREE.AxisHelper(4));
+
+
+		// separate(renderer);
+		// renderer.clippingPlanes = [
+		// 	new THREE.Plane(new THREE.Vector3( 0, 0, -1 ), 6),
+		// 	new THREE.Plane(new THREE.Vector3( 0, 0, 1 ), -5),
+    	// ];
+		// registerMeasure();
+		// addEventListener('measure', ({distance, x, y, z}) => {
+		// 	alert(`distance: ${distance}
+		// 	x:${x}
+		// 	y:${y}
+		// 	z:${z}`);
+		// 	removeEventListener('measure');
+		// })
+		// enableMeasure();
+		// registerItemSelect();
+		// enableItemSelect();
+
+
+
+		// 红绿灯
+		// registerEmergency(scene, camera, renderer.domElement, controls);
+		// enableEmergency();
+
+	</script>
+	<!-- <image id='i'></image> -->
+
+</body>
+
+</html>
