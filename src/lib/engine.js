@@ -8,7 +8,7 @@ let onAfterMeshLoad = mesh => {
     if (mesh.material.opacity < 1)
         mesh.material.transparent = true;
 };
-let elementFilter = (mesh) => mesh.name === '2_284_49396';
+let elementFilter = () => true;
 const getUrl = (groupId, version) => file => `${url}/downloadModel3/${groupId}/${version}/${file}`;
 let loader = new GLTFLoader();
 let fileLoader = new FileLoader();
@@ -242,10 +242,10 @@ export async function loadModel(groupId, callback = console.log) {
             tasks.push(loadSharedMesh(groupId, Version, SharedMeshInfo, SharedMeshFile));
         }
         if (NormalFile) {
-            // tasks.push(loadMesh(groupId, Version, NormalFile));
+            tasks.push(loadMesh(groupId, Version, NormalFile));
         }
         if (CylinderInfo) {
-            // tasks.push(loadCylinder(groupId, Version, CylinderInfo));
+            tasks.push(loadCylinder(groupId, Version, CylinderInfo));
         }
         return Promise.all(tasks).then(() => callback(DomainName)).catch(console.error);
     }), Promise.resolve());
