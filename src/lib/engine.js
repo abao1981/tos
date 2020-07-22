@@ -1,18 +1,24 @@
-import { scene } from '../main.js';
+import { scene, camera, renderer } from '../main.js';
 import { Color, Box3, FileLoader, InstancedMesh, Matrix4, Geometry, BufferGeometry, InstancedBufferGeometry, InstancedBufferAttribute, Vector3, Shape, LineCurve3, ExtrudeGeometry, MeshPhongMaterial, Mesh } from '../../build/three.module.js';
 import { GLTFLoader } from '../../jsm/loaders/GLTFLoader.js';
 import { changeEmissive } from './select.js';
+import { ClipBox } from './clipBox.js'
+
+export var clipBox = new ClipBox(scene, camera, renderer);
 
 let url = 'http://ip3.tztos.cn:5555/module';
 let onAfterMeshLoad = mesh => {
     if (mesh.material.opacity < 1)
         mesh.material.transparent = true;
+    clipBox.expand(mesh);
 };
 let elementFilter = () => true;
 const getUrl = (groupId, version) => file => `${url}/downloadModel3/${groupId}/${version}/${file}`;
 let loader = new GLTFLoader();
 let fileLoader = new FileLoader();
 let diffMap = new Map();
+
+clipBox.startExpand();
 
 // 逾期： 红色置顶
 // 已完成
@@ -244,7 +250,7 @@ export async function loadModel(groupId, callback = console.log) {
             loadMesh(groupId, Version, NormalFile),
             loadCylinder(groupId, Version, CylinderInfo)
         ]).then(() => callback(DomainName)).catch(console.error)
-    ), Promise.resolve());
+    ), Promise.resolve()).then(() => clipBox.done());
 
 }
 

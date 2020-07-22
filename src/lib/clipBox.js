@@ -114,10 +114,16 @@ var ClipBox = function (scene, camera, renderer) {
     scope.coneGizmo = [];
 
     scope.enableClip = function () {
+        controls.enabled = true;
+        scope.boxMesh.visible = true;
+        scope.coneGizmo.forEach(obj => obj.visible = true);
         renderer.localClippingEnabled = true;
     }
 
     scope.disableClip = function () {
+        controls.enabled = false;
+        scope.boxMesh.visible = false;
+        scope.coneGizmo.forEach(obj => obj.visible = false);
         renderer.localClippingEnabled = false;
     }
 
