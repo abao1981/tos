@@ -34,7 +34,6 @@ function onDocumentMouseDown(event) {
 export function changeEmissive(color) {
     return function (object, indices = null) {
         let _indices = indices || object.userData.instanceIds;
-        console.log(_indices)
         if (_indices && _indices.length) {
             for (let instanceId of _indices) {
                 color.toArray(object.geometry.attributes.instanceEmissive.array, instanceId * 3);
@@ -153,7 +152,6 @@ function getIntersect(topmost = NaN) {
             let intersection = _raycaster.intersectObject(mesh);
             if (intersection.length > 0) {
                 mesh.userData.instanceId = intersection[0].instanceId;
-                console.log(mesh.name + "," + intersection[0].instanceId)
                 return mesh;
             }
         } else {
@@ -186,13 +184,11 @@ export default class Select {
         document.addEventListener('mouseup', onDocumentMouseUp.bind(this));
 
         let self = this;
-        this.addUnselectEventListener('default', function(a) {
-            console.log(a)
+        this.addUnselectEventListener('default', function() {
             self.selected.forEach(changeEmissive(self.defaultColor));
         })
 
-        this.addSelectEventListener('default', function(a) {
-            console.log(a)
+        this.addSelectEventListener('default', function() {
             self.selected.forEach(changeEmissive(self.changedColor));
         })
 

@@ -59,15 +59,15 @@ function setStyle(object, pattern) {
     }
 }
 
-function resetStyle(object){
+function resetStyle(object) {
     let reset = changeEmissive(new Color(0, 0, 0));
     reset(object);
-    if (object.userData.opacity){
+    if (object.userData.opacity) {
         object.material.opacity = object.material.userData.opacity;
     }
-    if (object.userData.transparent){
+    if (object.userData.transparent) {
         object.material.transparent = object.material.userData.transparent;
-    }else{
+    } else {
         object.material.transparent = false;
     }
     object.material.alphaTest = 0;
@@ -93,6 +93,7 @@ export function init(options) {
 // let scene;
 
 function loadCylinder(groupId, version, file, lod = 16) {
+    if (!file) return Promise.resolve();
     return new Promise((resolve, reject) => {
         fileLoader.load(getUrl(groupId, version)(file), info => {
             let circles = JSON.parse(info);
@@ -142,6 +143,7 @@ function loadCylinder(groupId, version, file, lod = 16) {
 
 
 function loadSharedMesh(groupId, version, info, mesh) {
+    if (!info || !mesh) return Promise.resolve();
     return new Promise((resolve, reject) => {
         let getFile = getUrl(groupId, version);
         fileLoader.load(getFile(info), info => {
@@ -208,7 +210,7 @@ function loadSharedMesh(groupId, version, info, mesh) {
 }
 
 function loadMesh(groupId, version, mesh) {
-
+    if (!mesh) return Promise.resolve();
     return new Promise((resolve, reject) => {
         let getFile = getUrl(groupId, version);
         loader.load(getFile(mesh), function (gltf) {
@@ -236,19 +238,13 @@ export async function loadModel(groupId, callback = console.log) {
         domains.some(({ Version, DomainName }) => info.DomainName === DomainName && info.Version === Version)
     );
 
-    return modelInfos.reduce((acc, { DomainName, NormalFile, SharedMeshFile, SharedMeshInfo, CylinderInfo, Version }) => acc.then(() => {
-        let tasks = [];
-        if (SharedMeshInfo && SharedMeshFile) {
-            tasks.push(loadSharedMesh(groupId, Version, SharedMeshInfo, SharedMeshFile));
-        }
-        if (NormalFile) {
-            tasks.push(loadMesh(groupId, Version, NormalFile));
-        }
-        if (CylinderInfo) {
-            tasks.push(loadCylinder(groupId, Version, CylinderInfo));
-        }
-        return Promise.all(tasks).then(() => callback(DomainName)).catch(console.error);
-    }), Promise.resolve());
+    return modelInfos.reduce((acc, { DomainName, NormalFile, SharedMeshFile, SharedMeshInfo, CylinderInfo, Version }) => acc.then(() =>
+        Promise.all([
+            loadSharedMesh(groupId, Version, SharedMeshInfo, SharedMeshFile),
+            loadMesh(groupId, Version, NormalFile),
+            loadCylinder(groupId, Version, CylinderInfo)
+        ]).then(() => callback(DomainName)).catch(console.error)
+    ), Promise.resolve());
 
 }
 
@@ -274,42 +270,56 @@ export async function loadModelDiff(groupId, { domain, beforeVersion, afterVersi
         return;
     }
 
+    //ChangeType: xinzeng ,shanchu ,xiugai
     for (let node of tree.data) {
         diff[node.ChangeType] = [...diff[node.ChangeType], ...node.ElementIds.split(/[,|]/)].filter(i => i.length);
     }
 
-    let allModelInfos = await fetch(`${url}/getDownloadFileInfo?ModuleGroupId=${groupId}`).then(resp => resp.json());
+    let info1 = await fetch(`${url}/getDownloadFileInfo?ModuleGroupId=${groupId}&Version=${beforeVersion}`).then(resp => resp.json());
+    let info2 = await fetch(`${url}/getDownloadFileInfo?ModuleGroupId=${groupId}&Version=${afterVersion}`).then(resp => resp.json());
 
-    let modelInfos = allModelInfos.filter(info => info.DomainName === domain);
-    let { NormalFile, SharedMeshFile, SharedMeshInfo, CylinderInfo, Version } = modelInfos[0];
+    let [{ NormalFile: beforeNormalFile, SharedMeshFile: beforeSharedMeshFile, SharedMeshInfo: beforeSharedMeshInfo, CylinderInfo: beforeCylinderInfo }] = info1.filter(info => info.DomainName === domain);
+    let [{ NormalFile: afterNormalFile, SharedMeshFile: afterSharedMeshFile, SharedMeshInfo: afterSharedMeshInfo, CylinderInfo: afterCylinderInfo }] = info2.filter(info => info.DomainName === domain);
 
-    if (SharedMeshInfo && SharedMeshFile) {
-        loadSharedMesh(groupId, Version, SharedMeshInfo, SharedMeshFile);
-    }
-    if (NormalFile) {
-        loadMesh(groupId, Version, NormalFile);
-    }
-    if (CylinderInfo) {
-        loadCylinder(groupId, Version, CylinderInfo);
-    }
+    let old = onAfterMeshLoad;
+    let oldFilter = elementFilter;
 
-    scene.traverse(mesh => {
+    // 旧版本
+    onAfterMeshLoad = mesh => {
+        if (!mesh.isMesh) return;
+        mesh.material.color.set(0x00ff00);
+    }
+    elementFilter = mesh => diff[2].some(name => name === mesh.name);
+
+    await Promise.all([
+        loadSharedMesh(groupId, beforeVersion, beforeSharedMeshInfo, beforeSharedMeshFile),
+        loadMesh(groupId, beforeVersion, beforeNormalFile),
+        loadCylinder(groupId, beforeVersion, beforeCylinderInfo)
+    ]);
+
+    elementFilter = oldFilter;
+
+    onAfterMeshLoad = mesh => {
         if (!mesh.isMesh) return;
         if (diff[0].some(name => name === mesh.name)) {
             diffMap.set(mesh.uuid, mesh.material.color.clone())
             mesh.material.color.set(0xff0000);
         } else if (diff[1].some(name => name === mesh.name)) {
             diffMap.set(mesh.uuid, mesh.material.color.clone())
-            mesh.material.color.set(0x00ff00);
-        } else if (diff[2].some(name => name === mesh.name)) {
-            diffMap.set(mesh.uuid, mesh.material.color.clone())
-            mesh.material.color.set(0x00ff00);
+            mesh.material.color.set(0x0000ff);
         } else {
             mesh.material.transparent = true;
             mesh.material.opacity = 0.3;
         }
-    });
+    }
 
+    await Promise.all([
+        loadSharedMesh(groupId, afterVersion, afterSharedMeshInfo, afterSharedMeshFile),
+        loadMesh(groupId, afterVersion, afterNormalFile),
+        loadCylinder(groupId, afterVersion, afterCylinderInfo)
+    ]);
+
+    onAfterMeshLoad = old;
 }
 
 export function loadModelStage(scene, groupId, cb) {
